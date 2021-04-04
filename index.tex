@@ -1,19 +1,16 @@
 % -----------------------------------------------
-% Prelude
 \documentclass[xcolor={dvipsnames},xtable]{beamer}
 \usetheme{metropolis}
 
 \input{include/preamble.tex}
 
 % -----------------------------------------------
-% Title
-\title{Title}
-\subtitle{Subtitle}
+\title{An overview of compiler architecture}
+\subtitle{}
 \date{\today}
-\author{Author}
+\author{Eric Zhao}
 
 % -----------------------------------------------
-% Core
 \begin{document}
 
 \input{include/shared.tex}
@@ -25,5 +22,7 @@
 \newcommand{\subdir}{sections}
 \newcommand{\codedir}{listings}
 \subfile{sections/00-intro.tex}
+\subfile{sections/01-organization.tex}
+\subfile{sections/02-tools.tex}
 
 \end{document}

@@ -1,16 +1,165 @@
 % -----------------------------------------------
 % chktex-file 44
 \documentclass[../index.tex]{subfiles}
-
-% -----------------------------------------------
-
 \begin{document}
 
 % -----------------------------------------------
 
-\renewcommand{\currenttitle}{Example slide}
+\renewcommand{\sectiontitle}{Before we begin}
+\renewcommand{\currenttitle}{What we're going to be covering}
 \begin{frame}{\currenttitle}
-  Slide contents!
+  
+  A shallow review of:
+
+  \begin{itemize}
+    \item Requirements and objectives
+      \begin{itemize}
+        \item Different kinds of compilers
+      \end{itemize}
+    \item Organization of a basic compiler
+      \begin{itemize}
+        \item Lexical analyzers and regular expressions
+        \item Parsing algorithms
+        \item Intermediate representations
+        \item Analysis techniques
+        \item Code generation
+      \end{itemize}
+    \item Useful tools for creating compilers
+  \end{itemize}
+\end{frame}
+
+% -------------------------------------
+\renewcommand{\sectiontitle}{Requirements and objectives}
+\section{\sectiontitle}
+
+% ---------------------------
+\renewcommand{\currenttitle}{What is a compiler?}
+\begin{frame}[fragile]{\currenttitle}
+  A compiler \textbf{translates source code from one language to another} \\[2em]
+
+  We're typically referring to \textbf{the translation of a high-level
+  programming language to executable low-level code}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  A compiler might convert a C++ program into machine code compatible with the
+  computer's CPU: \\[2em]
+
+  \chgrand[first=0,last=1]
+  \newcommand{\randbit}{\rand\arabic{rand}}
+  \begin{center}
+    \begin{tikzpicture}
+      \node (Code) [draw, inner sep=0.5em, outer sep=2] {
+        \begin{lstlisting}[language=C++,basicstyle=\tiny\ttfamily]
+#include <iostream>
+
+int main() {
+  std::cout << "Hello, World!" << std::endl;
+}
+        \end{lstlisting}
+      };
+    \node (Compiler) [draw, below=0.3cm of Code, outer sep=2] {Compiler};
+    \node (Output) [draw, below=0.3cm of Compiler, inner sep=0.5em, outer sep=2, text width=4.5cm] {
+        {
+          \centering
+          \tiny\ttfamily
+          \noindent
+          \foreach \n in {1,...,4}{
+            \foreach \m in {1,...,40} {\randbit} \\
+          }
+        }
+    };
+
+    \draw[->] (Code) to (Compiler);
+    \draw[->] (Compiler) to (Output);
+    \end{tikzpicture}
+  \end{center}
+
+  \let\randbit\undefined
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
+  Another compiler might convert Typescript into legacy-compatible JavaScript: \\[2em]
+
+  \begin{center}
+    \begin{tikzpicture}
+      \node (Code) [draw, inner sep=0.5em, outer sep=2] {
+        \begin{lstlisting}[language=ES6,basicstyle=\tiny\ttfamily]
+class Greeter {
+  greeting: string;
+  constructor(message: string) {
+    this.greeting = message;
+  }
+  greet() {
+    return "Hello, " + this.greeting;
+  }
+}
+        \end{lstlisting}
+      };
+    \node (Compiler) [draw, below=0.3cm of Code, outer sep=2] {Compiler};
+    \node (Output) [draw, right=1.4cm of Compiler, inner sep=0.5em, outer sep=2] {
+        \begin{lstlisting}[language=ES6,basicstyle=\tiny\ttfamily]
+var Greeter = (function() {
+  function Greeter(message) {
+    this.greeting = message;
+  }
+  Greeter.prototype.greet = function() {
+    return "Hello, " + this.greeting;
+  }
+  return Greeter;
+})();
+        \end{lstlisting}
+    };
+
+    \draw[->] (Code) to (Compiler);
+    \draw[->] (Compiler) to (Output);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Compilers can produce different outputs, depending on the purpose:
+
+  \begin{itemize}
+    \item<+-> Machine code
+    \item<+-> Bytecode
+    \item<+-> Assembly code
+    \item<+-> Intermediate code forms (typically for internal use)
+    \item<+-> Other high-level programming language code
+    \item<+-> Etc.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Some examples:
+
+  \begin{itemize}
+    \item<+-> \texttt{javac} compiles Java source code into bytecode class
+      files, which are executed by the JVM
+    \item<+-> Clang can compile C/C++ into machine code, LLVM IR,
+      various assembly forms, etc.
+    \item<+-> CPython produces bytecode from Python source that is then
+      executed
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  We can use different names for these different kinds of compilers:
+
+  \begin{itemize}
+    \item<+-> Source-to-source compilers or \textit{transpilers} transform
+      high-level code into other high-level code
+    \item<+-> Bytecode compilers produce low-level instructions to be executed
+    \item<+-> JIT compilers defer compilation until runtime, and compile
+      frequently run "hot" code paths
+    \item<+-> Assemblers convert assembly language into machine code
+  \end{itemize}
 \end{frame}
 
 % -----------------------------------------------

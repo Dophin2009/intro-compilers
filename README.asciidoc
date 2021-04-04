@@ -1,15 +1,6 @@
-= Beamer Project Framework
+= Introduction to Compilers
 
-Beamer project template using Metropolis theme.
-
-== Features
-
-* Multiple build methods
-** Using the system TeX installation
-** Using TinyTeX
-** Using Docker
-* GitHub action to build the PDF on push
-* Decent file organization
+An surface-level overview of compiler organization and architecture.
 
 == Building
 
