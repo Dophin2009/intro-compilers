@@ -3,7 +3,7 @@
 \documentclass[../index.tex]{subfiles}
 \begin{document}
 
-% -----------------------------------------------
+% -------------------------------------
 
 \renewcommand{\sectiontitle}{Organization of a basic compiler}
 \section{\sectiontitle}
@@ -12,15 +12,500 @@
 \renewcommand{\currenttitle}{Front-end and back-end}
 \begin{frame}{\currenttitle}
   Much like a full-stack web application, we can split the compiler into a
-  \textbf{front-end} and a \textbf{back-end}:
+  \textbf{front-end} and a \textbf{back-end}: \\[2em]
+
+  \begin{tikzpicture}[%
+    wrapper/.style={matrix of nodes, nodes=typetag, row sep=1em},
+    container/.style={draw, inner sep=1ex},
+    typetag/.style={draw=gray, inner sep=1ex, anchor=west},
+    title/.style={draw=none, inner sep=0pt}
+  ]
+    \matrix[wrapper] (Frontend) {
+      |[title]|Front-end \\
+      Lexical analysis \\
+      Parsing \\
+      Semantic analysis \\
+      Intermediate code generation \\
+    };
+    \matrix[wrapper, right=of Frontend.north east, matrix anchor=north west] (Backend) {
+      |[title]|Back-end \\
+      More optimization \\
+      Code generation \\
+    };
+
+    \node[container, fit=(Frontend)] {};
+    \node[container, fit=(Backend)] {};
+  \end{tikzpicture}
+\end{frame}
+
+% ---------------------------
+\begin{frame}{\currenttitle}
+  The front-end:
+  \begin{itemize}
+    \item Deals with the details of the source language
+    \item Verifies that the programmer's code is correct
+    \item Generates an intermediate representation that the backend can handle
+  \end{itemize}
+
+  The back-end:
+  \begin{itemize}
+    \item Is ignorant to the details of the source language
+    \item Performs optimizations specific to the target machine
+    \item Generates the final executable program
+  \end{itemize}
+\end{frame}
+
+
+% ---------------------------
+\begin{frame}{\currenttitle}
+  \onslide<+->{What does this separation mean?} \\[2em]
+
+  \onslide<+->{With \textbf{\texttt{M}} front-ends for \textbf{\texttt{M}}
+  source languages\ldots{}}
+  \onslide<+->{and \textbf{\texttt{N}} back-ends for \textbf{\texttt{N}}
+    target machines,} \\[1em]
+    
+  \hspace*{2em}
+  \onslide<+->{\textit{we can write \textbf{\texttt{M x N}} compilers}}
+\end{frame}
+
+% -------------------------------------
+
+\renewcommand{\sectiontitle}{Syntax analysis}
+\section{\sectiontitle}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Understanding the source code}
+\begin{frame}{\currenttitle}
+  We want to parse source code into data that we can analyze and transform. \\[2em]
+
+  Typically, compilers first construct an \textbf{abstract syntax tree (AST)}:
+
+  \begin{center}
+    \begin{tikzpicture}[
+      font=\ttfamily,
+      nodes={draw=none},
+      level distance=0.8cm,
+      ->
+    ]
+      \node (Code) at (0,-1.5) [inner sep=0.5em, outer sep=2] {
+          a = b + c * d("hello");
+      };
+
+      \node (AST) at (4,0) {=}
+        child {node {a}}
+        child {node {+}
+          child {node {b}}
+          child {node {*}
+            child {node {c}}
+            child {node {call}
+              child {node {d}}
+              child {node {"hello"}}
+            }
+          }
+        }
+      ;
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% ---------------------------
+\begin{frame}{\currenttitle}
+  \onslide<+->{
+    It's the job of the \textbf{parser} to convert the \textbf{tokens}
+    \texttt{a}, \texttt{=}, \texttt{b}, \texttt{+}, \ldots{} into the syntax
+    tree \\[1em]
+  }
+
+  \onslide<+->{
+    But before that, how do we get those tokens?
+  }
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Lexical analysis}
+\begin{frame}[fragile]{\currenttitle}
+  To convert textual source code into \textbf{tokens}, we must perform
+  \textbf{lexical analysis}: \\[1em]
+
+  Given the source code: 
+
+  \newcommand{\token}[2]{%
+    {
+      \scriptsize
+      \begin{tabular}{|l |l |}
+        \hline
+        \textbf{#2} & #1 \\
+        \hline
+      \end{tabular}
+    }
+  }
+
+  \begin{lstlisting}[language=C++,xleftmargin=1.5em]
+int main() {
+  return 1;
+}
+  \end{lstlisting}
+
+  The \textbf{lexer / lexical analyzer} might spit out the tokens: \\[0.5em]
 
   \begin{tikzpicture}
-    \node (Frontend) [draw] {
-      Front-end 
-      
+    \newcommand{\tokennode}[2]{
+      \node [shape=rectangle, anchor=west, outer sep=.0] {
+        \token{#1}{#2}
+      };
     }
 
+    \matrix[ampersand replacement=\&, matrix of nodes, align=left] {
+      \tokennode{int}{Type}   \& \tokennode{main}{Identifier} \& \tokennode{(}{Symbol}        \\
+      \tokennode{)}{Symbol}   \& \tokennode{\{}{Symbol}       \& \tokennode{return}{Keyword}  \\
+      \tokennode{1}{Literal}  \& \tokennode{;}{Symbol}        \& \tokennode{\}}{Symbol}       \\
+    };
   \end{tikzpicture}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  To implement a lexer, we can:
+
+  \begin{itemize}
+    \item Manually scan and lookahead the input characters
+    \item Implement a \textbf{finite state machine}
+  \end{itemize}
+
+  In practice, the latter method typically uses a \textbf{lexer generator} to
+  generate the state machine based on rules
+\end{frame}
+
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \only<+>{
+    To give an idea, a finite state machine to recognize a floating-point:
+  }
+
+  \vspace*{1em}
+
+  \newcommand{\statenode}[2]{\node [state] (#1) [#2] {$#1$}}
+  \begin{center}
+    \begin{tikzpicture}[shorten >= 1pt, node distance=2cm, on grid, auto, font=\ttfamily]
+      \tikzstyle{every state}=[fill={rgb:black,1;white,10}]
+
+      \node [state, initial]    (s_0)                       {$s_0$};
+      \node [state]             (s_1) [above right of=s_0]  {$s_1$};
+      \node [state, accepting]  (s_2) [below right of=s_1]  {$s_2$};
+      \node [state, accepting]  (s_3) [right of=s_2]        {$s_3$};
+
+      \path[->]
+        (s_0) edge                node {+/-} (s_1)
+              edge                node {0-9} (s_2)
+        (s_1) edge                node {0-9} (s_2)
+        (s_2) edge  [loop below]  node {0-9} ()
+              edge                node {.}   (s_3)
+        (s_3) edge  [loop below]  node {0-9} ()
+        ;
+    \end{tikzpicture}
+  \end{center}
+
+  \only<+>{
+    \begin{itemize}
+      \item Start on $s_0$
+      \item Read input and move accordingly until the end of the input
+        \begin{itemize}
+          \item If we end on a double-ringed (accepting) state, the input
+            string is a floating-point literal
+          \item If not, it's not
+          \item If we encounter an input that doesn't have a transition, it's
+            not
+        \end{itemize}
+    \end{itemize}
+  }
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  To implement a proper lexer using these ideas:
+
+  \begin{itemize}
+    \item Combine this with other state machines that recognize other tokens
+      (string literals, keywords, etc.) into one large machine
+    \item Read input until we come across the end or an input character with no
+      transition on the current state, then backtrack until we find the longest
+      match (most recent accepting state)
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Additionaly, the lexer may:
+
+  \begin{itemize}
+    \item Register identifiers it encounters in \textbf{symbol tables} to be
+      used by other parts of the compiler
+    \item Be called lazily by the parser
+  \end{itemize}
+
+  \vspace*{1em}
+
+  \begin{tikzpicture}[outer sep=1mm, node distance=8mm, auto]
+    \footnotesize
+    \node (source) {Source program};
+    \node (lexer) [draw, right=of source] {Lexical analyzer};
+    \node (table) [draw, below right=of lexer] {Symbol Table};
+    \node (parser) [draw, right=of lexer:7] {Parser};
+
+    \draw [->] (source) to (lexer);
+    \draw [<->] (lexer) to (table);
+    \draw [<->] (table) to (parser);
+
+    \coordinate (lexer_u) at ($(lexer.north east)!.4!(lexer.south east)$);
+    \coordinate (lexer_d) at ($(lexer.north east)!.6!(lexer.south east)$);
+    \coordinate (parser_u) at ($(parser.north west)!.4!(parser.south west)$);
+    \coordinate (parser_d) at ($(parser.north west)!.6!(parser.south west)$);
+
+    \path[->]
+      (lexer_u)     edge  node {\texttt{token}}         (parser_u)
+      (parser_d)    edge  node {\texttt{next\_token()}} (lexer_d)
+      ;
+
+    \node[right =of parser] {} edge [<-, thin, densely dotted] (parser);
+  \end{tikzpicture}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\sectiontitle}{Parsing}
+\renewcommand{\currenttitle}{\sectiontitle}
+\begin{frame}[fragile]{\currenttitle}
+  Now that we have tokens, we need to make meaning of them by parsing them into
+  a syntax tree \\[1em]
+
+  To describe how we parse and what kind of tree we construct, we define the
+  syntax of the language using a \textbf{context-free grammar}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Context-free grammars}
+\begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
+  Most commonly, we use \textbf{Extended Bakus-Naur form} notation \\[1.5em]
+
+  EBNF for a small numeric expression calculator: \\[1em]
+
+  \begin{lstlisting}[xleftmargin=2em]
+expr      = binary_op
+          | unary_op
+          | num
+          | "(", expr, ")"  ;
+binary_op = expr, "+", expr
+          | expr, "-", expr
+          | expr, "*", expr
+          | expr, "/", expr ;
+unary_op  = "-", expr       ;
+num       = integer
+          | decimal   ;
+  \end{lstlisting}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Context-free grammars use sets of \textbf{production rules} that define the
+  structure of the language:
+  \begin{itemize}
+    \item<+-> A rule contains a \textbf{nonterminal} symbol on the right and a
+      sequence of both nonterminal and \textbf{terminal} symbols on the left
+    \item<+-> Terminals are base units that can't be broken down into other symbols
+      (they have no production rules of their own)
+      \begin{itemize}
+        \item Shown in quotes in the above EBNF
+        \item In our case, tokens we get from the lexer
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Parsing algorithms}
+\begin{frame}[fragile]{\currenttitle}
+  There are a number of parsing algorithms we can use to build our syntax tree:
+
+  \begin{itemize}
+    \item<2-> Top-down parsing
+      \begin{itemize}
+        \item LL
+        \item Recursive descent
+        \item Pratt parsing
+      \end{itemize}
+    \item<3-> Bottom-up parsing
+      \begin{itemize}
+        \item LR\footnote{Many subcategorizations depending on lookahead size
+          and parsing table creation method}
+          (SLR, LALR, canonical LR, GLR, etc.)
+      \end{itemize}
+  \end{itemize}
+
+  \onslide<3->{We can of course use a mixture of these when appropriate}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Different parsing methods can handle different \textbf{classes} of grammars:
+  \onslide<+->{}
+
+  \begin{itemize}
+    \item<+-> Grammars parseable by LL parser are \textbf{LL grammars}
+      \begin{itemize}
+        \item Often produce lop-sided parse trees
+      \end{itemize}
+    \item<+-> Grammars parseable by LR parser are \textbf{LR grammars}
+      \begin{itemize}
+        \item Larger class of grammars than LL
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Textbooks traditionally recommend LR parsing because it can handle more
+  complex grammars in more robust ways
+
+  However, it is:
+
+  \begin{itemize}
+    \item<+-> Often tedious and lack of optimization can waste a lot of
+      efficiency
+    \item<+-> Too complex to create manually in practice
+      \begin{itemize}
+        \item We instead use \textbf{parser generators}
+      \end{itemize}
+  \end{itemize}
+
+  \onslide<+->{Many modern compilers eschew parser generators in favor of
+  handwritten top-down recursive descent parsers}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\sectiontitle}{Syntax translation}
+\renewcommand{\currenttitle}{\sectiontitle}
+\begin{frame}[fragile]{\currenttitle}
+  During parsing, the syntax tree is constructed by creating tree nodes with
+  metadata \textbf{attributes}
+
+  We use \textbf{semantic rules} for each production rule to produce such a
+  tree
+
+  \begin{center}
+    \begin{tabular}{l |l}
+      Production                  & Semantic Rule                       \\
+      \hline
+      $E \rightarrow E_1 + E_2$   & $E$.val = $E_1$.val + $E_2$.val \\
+      $E \rightarrow E_1 - E_2$   & $E$.val = $E_1$.val - $E_2$.val \\
+    \end{tabular}
+  \end{center}
+
+  How this is implemented depends of course on the parsing method used
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Syntax translation}
+\begin{frame}[fragile]{\currenttitle}
+  To model a syntax tree, we could define our tree nodes like so with an
+  inheritance scheme:
+
+  \begin{lstlisting}[language=C++]
+class Expression {  ...  };
+
+class BinOp extends Expression {
+  BinOp(Op op, Expression e1, Expression e2) {  ...  }
+};
+
+class UnaryOp extends Expression {
+  UnaryOp(Op op, Expression e) {  ...  }
+}
+
+enum class Op { Add, Sub, Neg };
+  \end{lstlisting}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  We might have the following grammar and translation scheme: \\[1em]
+
+  \begin{tabular}{l |l}
+    Production & Translation Rule \\
+    \hline
+    $E \rightarrow E_1 + E_2$   & \texttt{$E$.node = BinOp(Op::Add, $E_1$.node, $E_2$.node)} \\
+    $E \rightarrow E_1 - E_2$   & \texttt{$E$.node = BinOp(Op::Sub, $E_1$.node, $E_2$.node)} \\
+    $E \rightarrow {-E_1}$      & \texttt{$E$.node = UnaryOp(Op::Neg, $E_1$.node)} \\
+  \end{tabular}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  We might also modify the symbol table during parsing, just as with lexing:
+  \\[1.5em]
+
+  \begin{table}
+    \centering
+    \begin{tabular}{l |l}
+      Production                    & Translation Rule \\
+      \hline
+      $S \rightarrow$ var $D = E ;$ & \texttt{table.insert(D.name);} \\
+                                    & \texttt{$S$.node = Decl(D.name, E.val)}
+    \end{tabular}
+    \caption{Insert the new identifier to the symbol table when we encounter a
+    variable declaration}
+  \end{table}
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\sectiontitle}{Semantic analysis}
+\renewcommand{\currenttitle}{\sectiontitle}
+\begin{frame}[fragile]{\currenttitle}
+  The tree emitted by the parser can then be analyzed and transformed to check
+  the for non-syntax program errors:
+
+  \begin{itemize}
+    \item Mismatched types
+    \item Use of an undeclared identifier
+    \item Invalid operations
+    \item Other language-specific checking (e.g. lifetime analysis)
+  \end{itemize}
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\currenttitle}{Type analysis, checking, inference}
+\begin{frame}[fragile]{\currenttitle}
+  In many languages, types are statically checked at compile time; this would
+  occur during the semantic analysis phase \\[2em]
+
+  A classic and widely used method of checking and inferring types is the
+  \textbf{Hindley-Milner type system}
+
+  We can infer that the variables \texttt{a} and \texttt{x} are of type
+  \texttt{u32} 
+
+  \begin{lstlisting}[language=Rust, xleftmargin=5mm]
+fn sum(a: u32, b: u32) -> u32 {
+  return a + b;
+}
+
+let a = 5;
+let x = sum(a, 10);
+  \end{lstlisting}
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\currenttitle}{Intermediate representations}
+\begin{frame}[fragile]{\currenttitle}
+  During analysis and optimization, it's usually necessary to use different
+  representations (other than an abstract syntax tree) more conducive to
+  different kinds of analysis.
+
+  
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\currenttitle}{}
+\begin{frame}[fragile]{\currenttitle}
 \end{frame}
 
 % -----------------------------------------------

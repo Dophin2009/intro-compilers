@@ -3,7 +3,7 @@
 \documentclass[../index.tex]{subfiles}
 \begin{document}
 
-% -----------------------------------------------
+% -------------------------------------
 
 \renewcommand{\sectiontitle}{Before we begin}
 \renewcommand{\currenttitle}{What we're going to be covering}
@@ -159,6 +159,22 @@ var Greeter = (function() {
     \item<+-> JIT compilers defer compilation until runtime, and compile
       frequently run "hot" code paths
     \item<+-> Assemblers convert assembly language into machine code
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Requirements}
+\begin{frame}[fragile]{\currenttitle}
+  A compiler developer is subject to stringent requirements \\[2em]
+
+  A compiler must be:
+  \begin{itemize}
+    \item \textbf{Fast} \textendash{} We must be able to compile source
+      programs in a reasonable amount of time
+    \item \textbf{Correct} \textendash{} The resulting program must match
+      the intent of the programmer and language specification
+    \item \textbf{Optimized} \textendash{} The resulting program must be
+      efficient and make good use of the target machine's capabilities
   \end{itemize}
 \end{frame}
 
