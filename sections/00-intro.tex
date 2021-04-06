@@ -163,6 +163,62 @@ var Greeter = (function() {
 \end{frame}
 
 % ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  In the context of native machine code, it's meaningful to make a distinction
+  between compilers and \textbf{linkers}:
+
+  \begin{itemize}
+    \item<2-> A compiler produces \textbf{object files}
+    \item<3-> A compile-time linker combines object files and static
+      libraries into an executable
+    \item<4-> A runtime linker will load dynamic libraries at runtime
+  \end{itemize}
+
+  \onslide<4->{
+    If you've never written or compiled C/C++, these ideas may be foreign to you
+  }
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
+
+  \newcommand{\outputt}[2]{
+    \begin{tabular}{|l |l |}
+      \hline
+      \textbf{\small #1} & \cellcolor{black!20}\texttt{\scriptsize #2} \\
+      \hline
+    \end{tabular}
+  }
+
+  \begin{center}
+    \begin{tikzpicture}[
+        auto,
+        node distance=0.8,
+        tool/.style={draw, font=\bfseries, outer sep=1mm, preaction={fill, black!10}},
+        output/.style={draw=none},
+      ]
+      \node (source)      [output]                        {\outputt{Source code}{*.cpp, etc.}};
+      \node (compiler)    [tool, right=of source]         {Compiler};
+      \node (object)      [output, below=of compiler]     {\outputt{Object files}{*.o, *.obj}};
+      \node (linker)      [tool, below=of object]         {Linker};
+      \node (executable)  [output, below=2 of linker]     {\outputt{Executable}{ \_ ,*.exe}};
+
+      \node (lib)         [output, below left=of linker]  {\outputt{Library objects}{*.o, *.obj}};
+      \node (os)          [output, left=of linker]        {\outputt{OS code}{}};
+
+      \draw[->] (source)    to (compiler);
+      \draw[->] (compiler)  to (object);
+      \draw[->] (object)    to (linker);
+      \draw[->] (lib)       to (linker);
+      \draw[->] (os)        to (linker);
+      \draw[->] (linker)    to (executable);
+    \end{tikzpicture}
+  \end{center}
+
+\end{frame}
+
+% ---------------------------
 \renewcommand{\currenttitle}{Requirements}
 \begin{frame}[fragile]{\currenttitle}
   A compiler developer is subject to stringent requirements \\[2em]

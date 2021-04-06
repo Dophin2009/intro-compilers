@@ -40,19 +40,23 @@
 
 % ---------------------------
 \begin{frame}{\currenttitle}
-  The front-end:
-  \begin{itemize}
-    \item Deals with the details of the source language
-    \item Verifies that the programmer's code is correct
-    \item Generates an intermediate representation that the backend can handle
-  \end{itemize}
+  \onslide<+->{
+    The front-end:
+    \begin{itemize}
+      \item Deals with the details of the source language
+      \item Verifies that the programmer's code is correct
+      \item Generates an intermediate representation that the backend can handle
+    \end{itemize}
+  }
 
-  The back-end:
-  \begin{itemize}
-    \item Is ignorant to the details of the source language
-    \item Performs optimizations specific to the target machine
-    \item Generates the final executable program
-  \end{itemize}
+  \onslide<+->{
+    The back-end:
+    \begin{itemize}
+      \item Is ignorant to the details of the source language
+      \item Performs optimizations specific to the target machine
+      \item Generates the final executable program
+    \end{itemize}
+  }
 \end{frame}
 
 
@@ -77,7 +81,8 @@
 % ---------------------------
 \renewcommand{\currenttitle}{Understanding the source code}
 \begin{frame}{\currenttitle}
-  We want to parse source code into data that we can analyze and transform. \\[2em]
+  \vspace*{1em}
+  We want to parse source code into data that we can analyze and transform. \\[1.5em]
 
   Typically, compilers first construct an \textbf{abstract syntax tree (AST)}:
 
@@ -370,15 +375,15 @@ num       = integer
   However, it is:
 
   \begin{itemize}
-    \item<+-> Often tedious and lack of optimization can waste a lot of
+    \item<2-> Often tedious and lack of optimization can waste a lot of
       efficiency
-    \item<+-> Too complex to create manually in practice
+    \item<3-> Too complex to create manually in practice
       \begin{itemize}
         \item We instead use \textbf{parser generators}
       \end{itemize}
   \end{itemize}
 
-  \onslide<+->{Many modern compilers eschew parser generators in favor of
+  \onslide<4->{Many modern compilers eschew parser generators in favor of
   handwritten top-down recursive descent parsers}
 \end{frame}
 
@@ -389,26 +394,32 @@ num       = integer
   During parsing, the syntax tree is constructed by creating tree nodes with
   metadata \textbf{attributes}
 
-  We use \textbf{semantic rules} for each production rule to produce such a
-  tree
+  \onslide<2->{
+    We use \textbf{semantic rules} for each production rule to produce such a
+    tree:
 
-  \begin{center}
-    \begin{tabular}{l |l}
-      Production                  & Semantic Rule                       \\
-      \hline
-      $E \rightarrow E_1 + E_2$   & $E$.val = $E_1$.val + $E_2$.val \\
-      $E \rightarrow E_1 - E_2$   & $E$.val = $E_1$.val - $E_2$.val \\
-    \end{tabular}
-  \end{center}
+    \begin{center}
+      \begin{tabular}{l |l}
+        Production                  & Semantic Rule                       \\
+        \hline
+        $E \rightarrow E_1 + E_2$   & $E$.val = $E_1$.val + $E_2$.val \\
+        $E \rightarrow E_1 - E_2$   & $E$.val = $E_1$.val - $E_2$.val \\
+      \end{tabular}
+    \end{center}
 
-  How this is implemented depends of course on the parsing method used
+    How this is implemented depends of course on the parsing method
+    used\footnotemark{}
+
+    \footnotetext{Look into L- and S-attributed grammars and corresponding
+      parsing and translation methods}
+  }
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Syntax translation}
 \begin{frame}[fragile]{\currenttitle}
   To model a syntax tree, we could define our tree nodes like so with an
-  inheritance scheme:
+  inheritance scheme: \\[1em]
 
   \begin{lstlisting}[language=C++]
 class Expression {  ...  };
@@ -498,13 +509,52 @@ let x = sum(a, 10);
 \begin{frame}[fragile]{\currenttitle}
   During analysis and optimization, it's usually necessary to use different
   representations (other than an abstract syntax tree) more conducive to
-  different kinds of analysis.
+  different kinds of analysis:
 
-  
+  \begin{itemize}
+    \item Control-flow graphs
+    \item Tuple-based representations
+    \item Etc.
+  \end{itemize}
 \end{frame}
   
 % ---------------------------
-\renewcommand{\currenttitle}{}
+\renewcommand{\currenttitle}{Control-flow graphs}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\currenttitle}{Three-address code}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+  
+% ---------------------------
+\renewcommand{\currenttitle}{Static single assignment form}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Lower-level IR}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Stack management}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Heap management}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Back-end output}
+\begin{frame}[fragile]{\currenttitle}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Register allocation}
 \begin{frame}[fragile]{\currenttitle}
 \end{frame}
 
