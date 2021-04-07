@@ -50,7 +50,12 @@
   \newcommand{\randbit}{\rand\arabic{rand}}
   \begin{center}
     \begin{tikzpicture}
-      \node (Code) [draw, inner sep=0.5em, outer sep=2] {
+      \node (code) [
+        draw=black!50,
+        dashed,
+        inner sep=0.5em,
+        outer sep=2
+      ] {
         \begin{lstlisting}[language=C++,basicstyle=\tiny\ttfamily]
 #include <iostream>
 
@@ -59,8 +64,23 @@ int main() {
 }
         \end{lstlisting}
       };
-    \node (Compiler) [draw, below=0.3cm of Code, outer sep=2] {Compiler};
-    \node (Output) [draw, below=0.3cm of Compiler, inner sep=0.5em, outer sep=2, text width=4.5cm] {
+
+    \node (compiler) [
+      draw,
+      below=0.3cm of code,
+      outer sep=2,
+      preaction={fill, black!10},
+      font=\bfseries
+    ] {Compiler};
+
+    \node (output) [
+      draw=black!50,
+      dashed,
+      below=0.3cm of compiler,
+      inner sep=0.5em,
+      outer sep=2,
+      text width=4.5cm
+    ] {
         {
           \centering
           \tiny\ttfamily
@@ -71,8 +91,8 @@ int main() {
         }
     };
 
-    \draw[->] (Code) to (Compiler);
-    \draw[->] (Compiler) to (Output);
+    \draw[->] (code) to (compiler);
+    \draw[->] (compiler) to (output);
     \end{tikzpicture}
   \end{center}
 
@@ -86,7 +106,12 @@ int main() {
 
   \begin{center}
     \begin{tikzpicture}
-      \node (Code) [draw, inner sep=0.5em, outer sep=2] {
+      \node (code) [
+        draw=black!50,
+        dashed,
+        inner sep=0.5em,
+        outer sep=2
+      ] {
         \begin{lstlisting}[language=ES6,basicstyle=\tiny\ttfamily]
 class Greeter {
   greeting: string;
@@ -99,8 +124,22 @@ class Greeter {
 }
         \end{lstlisting}
       };
-    \node (Compiler) [draw, below=0.3cm of Code, outer sep=2] {Compiler};
-    \node (Output) [draw, right=1.4cm of Compiler, inner sep=0.5em, outer sep=2] {
+
+    \node (compiler) [
+      draw,
+      below=0.3cm of code,
+      outer sep=2,
+      preaction={fill, black!10},
+      font=\bfseries
+    ] {Compiler};
+
+    \node (output) [
+      draw=black!50,
+      dashed,
+      right=1.4cm of compiler,
+      inner sep=0.5em,
+      outer sep=2
+    ] {
         \begin{lstlisting}[language=ES6,basicstyle=\tiny\ttfamily]
 var Greeter = (function() {
   function Greeter(message) {
@@ -114,8 +153,8 @@ var Greeter = (function() {
         \end{lstlisting}
     };
 
-    \draw[->] (Code) to (Compiler);
-    \draw[->] (Compiler) to (Output);
+    \draw[->] (code) to (compiler);
+    \draw[->] (compiler) to (output);
     \end{tikzpicture}
   \end{center}
 \end{frame}
@@ -125,11 +164,11 @@ var Greeter = (function() {
   Compilers can produce different outputs, depending on the purpose:
 
   \begin{itemize}
-    \item<+-> Machine code
-    \item<+-> Bytecode
-    \item<+-> Assembly code
-    \item<+-> Intermediate code forms (typically for internal use)
-    \item<+-> Other high-level programming language code
+    \item<+-> Machine code (to be executed by the CPU)
+    \item<+-> Bytecode (to be interpreted)
+    \item<+-> Assembly code (to be then compiled by an assembler)
+    \item<+-> Intermediate code forms (typically for internal/debugging use)
+    \item<+-> Other high-level programming language code (transpiling)
     \item<+-> Etc.
   \end{itemize}
 \end{frame}
@@ -140,7 +179,7 @@ var Greeter = (function() {
 
   \begin{itemize}
     \item<+-> \texttt{javac} compiles Java source code into bytecode class
-      files, which are executed by the JVM
+      files, which are executed by the Java Virtual Machine
     \item<+-> Clang can compile C/C++ into machine code, LLVM IR,
       various assembly forms, etc.
     \item<+-> CPython produces bytecode from Python source that is then

@@ -59,10 +59,26 @@
   }
 \end{frame}
 
+% ---------------------------
+\begin{frame}{\currenttitle}
+  Different targets need different output code. For example:
+
+  \begin{itemize}
+    \item<2-> Different CPU architectures have different sets of instructions and quirks
+      \begin{itemize}
+        \item e.g. the x86 instruction set is different from ARM or MIPS sets
+      \end{itemize}
+    \item<3-> Web assembly bytecode is different from other bytecode, such as JVM bytecode
+  \end{itemize}
+
+  \vspace*{1em}
+  \onslide<4->{Thus, we need different compilers for different targets}
+\end{frame}
 
 % ---------------------------
 \begin{frame}{\currenttitle}
-  \onslide<+->{What does this separation mean?} \\[2em]
+  \onslide<+->{What does the separation between front-end and back-end allow us
+  to do?} \\[2em]
 
   \onslide<+->{With \textbf{\texttt{M}} front-ends for \textbf{\texttt{M}}
   source languages\ldots{}}
@@ -71,6 +87,21 @@
     
   \hspace*{2em}
   \onslide<+->{\textit{we can write \textbf{\texttt{M x N}} compilers}}
+
+\end{frame}
+
+% ---------------------------
+\begin{frame}{\currenttitle}
+  Often, it may be even more meaningful to distinguish between three sections:
+
+  \begin{itemize}
+    \item<+-> Front-end concerned with parsing and language-specific analysis
+      and optimization
+    \item<+-> Intermediate phases that analyze and optimize a language-agnostic
+      IR
+    \item<+-> Back-end code generation concerned with the details of the target
+      machine
+  \end{itemize}
 \end{frame}
 
 % -------------------------------------
@@ -292,7 +323,7 @@ int main() {
 \renewcommand{\currenttitle}{Context-free grammars}
 \begin{frame}[fragile]{\currenttitle}
   \vspace*{1em}
-  Most commonly, we use \textbf{Extended Bakus-Naur form} notation \\[1.5em]
+  Most commonly, we use \textbf{Extended Backus-Naur form} notation \\[1.5em]
 
   EBNF for a small numeric expression calculator: \\[1em]
 
@@ -512,49 +543,512 @@ let x = sum(a, 10);
   different kinds of analysis:
 
   \begin{itemize}
-    \item Control-flow graphs
-    \item Tuple-based representations
-    \item Etc.
+    \item<2-> Structured representations (e.g. abstract syntax trees, control-flow
+      graphs)
+    \item<3-> Flat representations (e.g. tuple-based representations)
+    \item<4-> Etc.
   \end{itemize}
+
+  \onslide<4->{A compiler will typically employ a series of many different IRs}
 \end{frame}
   
 % ---------------------------
 \renewcommand{\currenttitle}{Control-flow graphs}
 \begin{frame}[fragile]{\currenttitle}
+  A \textbf{control-flow graph} uses a graph representation to organize all
+  code paths possible during execution
+
+  It's a \textbf{directed graph} with \textbf{basic blocks} as nodes:
+
+  \begin{tikzpicture}
+  \end{tikzpicture}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  To achieve basic blocks, we can use \textbf{directed acyclic graphs (DAGs)}:
+
+  \newcommand{\lbl}[1]{\texttt{\small\bfseries #1}}
+  \begin{tikzpicture}
+    \begin{scope}[local bounding box=code]
+      \node (code) {
+        \begin{lstlisting}
+a = b + c
+d = a * b
+        \end{lstlisting}
+      };
+    \end{scope}
+
+    \begin{scope}[
+      shift={($(code.east)+(4cm, 0)$)},
+      auto,
+      outer sep=0.5mm,
+      node distance=1cm,
+      inner/.style={draw, shape=circle},
+      leaf/.style={draw=none, font=\bfseries}
+    ]
+      \node (star) at (0, 0) [inner, label={\lbl{d}}] {*};
+      \node (plus) at (-0.5, -1.5) [inner, label={\lbl{a}}] {+};
+      \node (c) at (-1.5, -3) [leaf] {c};
+      \node (b) at (0.5, -3) [leaf] {b};
+
+      \draw [<-] (star) to (plus);
+      \draw [<-, bend left] (star) to (b);
+      \draw [<-] (plus) to (b);
+      \draw [<-] (plus) to (c);
+
+    \end{scope}
+
+  \end{tikzpicture}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Control-flow graphs allow for many types of analysis and optimization:
+
+  \begin{itemize}
+    \item \textbf{Reachability} - Checking the edges between basic blocks can
+      determine subgraphs that are unreachable; these can be removed from the
+      final program
+  \end{itemize}
 \end{frame}
   
 % ---------------------------
-\renewcommand{\currenttitle}{Three-address code}
+\renewcommand{\currenttitle}{Tuple-based representations}
 \begin{frame}[fragile]{\currenttitle}
+  A tuple-based IR can be as close or far away from the source language or
+  target language as desired:
+
+  \begin{itemize}
+    \item \textbf{High-level} \textendash{} Resembles source language
+    \item \textbf{Medium-level} \textendash{} Target independent, but less
+      abstraction than high-level IR
+    \item \textbf{Low-level} \textendash{} Close to target language
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  These kinds of IRs typically:
+
+  \begin{itemize}
+    \item \textbf{Labels} and \textbf{\texttt{goto} jumps} serve as control flow
+    \item \textbf{Tuples} contain operators and operands
+  \end{itemize}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \textbf{High-level IR} can contain structured data like arrays and
+  objects\footnotemark{}: \\[1em]
+  
+  \begin{tikzpicture}
+    \node at (0, 0) (cpp) [draw=black!50, thin, densely dashed] {
+      \begin{lstlisting}[language=C++]
+double a[20][10];
+...
+for (int i = 0; i < n; i += di) {
+  a[i][j+2] = j;
+}
+      \end{lstlisting}
+    };
+
+    \node at (4.5, -2.4) (hir) [draw=black!50, thin, densely dashed, preaction={fill, normal text.bg}] {
+      \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+(COPY, 0, i)                        i := 0
+(LABEL, L1)                    L1:
+(JGE, i, n, L2)                     if i >= n goto L2
+(INDEX, a, i, t0)                   t0 := a[i]
+(ADD, j, 2, t1)                     t1 := j + 2
+(INDEX, t0, t1, t2)                 t2 := t0[t1]
+(COPY_TO_DEREF, j, t2)              *t2 := j
+(INCJUMP, i, di, L1)                i += di, goto L1
+(LABEL, L2)                    L2:
+      \end{lstlisting}
+    };
+  \end{tikzpicture}
+
+  \footnotetext{Code taken from: \url{https://cs.lmu.edu/~ray/notes/ir/}}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  As we start going lower, we might replace structured data with memory
+  indexing
+
+  \begin{itemize}
+    \item Still might be machine-independent
+    \item Could be ignorant to the details of the source language
+    \item More concerned with memory access
+      \begin{itemize}
+        \item Generated code must know the exact position of all data
+      \end{itemize}
+    \item Might still be unconcerned with stack management and procedure call
+      mechanisms
+  \end{itemize}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  If \texttt{double}s are 8 bytes, and \texttt{int}s are 4 bytes, the same code
+  in mid-level IR: \\[1.5em]
+
+  \begin{lstlisting}[xleftmargin=0.5cm]
+(COPY, 0, i)                        i := 0
+(LABEL, L1)                    L1:
+(JGE, i, n, L2)                     if i >= n goto L2
+(MUL, i, 80, t0)                    t0 := i * 80
+(ADD, a, t0, t1)                    t1 := a + t0
+(ADD, j, 2, t2)                     t2 := j + 2
+(MUL, t2, 8, t3)                    t3 := t2 * 8
+(ADD, t1, t3, t4)                   t4 := t1 + t3
+(COPY_TO_DEREF, j, t4)              *t4 := j
+(ADD, i, di, i)                     i := i + di
+(JUMP, L1)                          goto L1
+(LABEL, L2)                    L2:
+  \end{lstlisting}
+
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  At low levels, the IR is close to the machine architecture:
+
+  \begin{itemize}
+    \item Target-dependent, use of instruction set operators
+    \item Register allocation, stack management, procedure call mechanisms
+  \end{itemize}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  Same code in low-level IR for a RISC processor: \\[1em]
+
+  \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+(LDC, 0, r0)                        r0 := 0
+(LOAD, j, r1)                       r1 := j
+(LOAD, n, r2)                       r2 := n
+(LOAD, di, r3)                      r3 := di
+(LOAD, a, r4)                       r4 := a
+(LABEL, L1)                    L1:
+(JGE, r0, r2, L2)                   if r0 >= r2 goto L2
+(MUL, r0, 80, r5)                   r5 := r0 * 80
+(ADD, r4, r5, r6)                   r6 := r4 + r5
+(ADD, r1, 2, r7)                    r7 := r1 + 2
+(MUL, r7, 8, r8)                    r8 := r7 * 8
+(ADD, r6, r8, r9)                   r9 := r6 + r8
+(TOFLOAT, r1, f0)                   f0 := tofloat r1
+(STOREIND, f0, r9)                  *r9 := f0
+(ADD, r0, r3, r0)                   r0 := r0 + r3
+(JUMP, L1)                          goto L1
+(LABEL, L2)                    L2:
+  \end{lstlisting}
 \end{frame}
   
 % ---------------------------
 \renewcommand{\currenttitle}{Static single assignment form}
 \begin{frame}[fragile]{\currenttitle}
+  \textbf{Static single assignment form (SSA)} is a property of IRs that allow
+  for many optimizations and transformations \\[1.5em]
+
+  According to SSA, each variable can only be assigned \textbf{exactly once} \\
+  Thus, each reassignment is the declaration of a new variable
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  In this code, we can see that the first assignment to \texttt{y} is actually
+  unused; the second assignment overrides the value before \texttt{y} is used
+
+  \texttt{%
+    y := 1 \\
+    y := 2 \\
+    x := y
+  } \\[1em]
+
+  The SSA form:
+
+  \texttt{%
+    y\textsubscript{1} := 1 \\
+    y\textsubscript{2} := 1 \\
+    x\textsubscript{1} := y\textsubscript{2}
+  }
+
+  It's immediately obvious that y\textsubscript{1} is unused and that statement
+  can be eliminated
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  SSA is useful in control-flow analysis
+
+  Given this branching code, we can produce the following CFG: \\[1em]
+
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{scope}[local bounding box=code]
+        \node (code) {
+          \begin{lstlisting}[language=Rust]
+let y;
+if x < 3 {
+  y = x * 2;
+} else {
+  y = x - 3;
+}
+let w = x - y;
+          \end{lstlisting}
+        };
+      \end{scope}
+
+      \begin{scope}[
+        local bounding box=cfg1,
+        shift={($(code.east)+(3cm, 1cm)$)},
+        auto,
+        block/.style={draw=black!50, thin, densely dashed, outer sep=1mm, font=\footnotesize\ttfamily},
+        edge/.style={above, font=\scriptsize\ttfamily}
+      ]
+        \node (b1) at (0, 0)    [block] { x < 3 ? };
+        \node (b2) at (-1, -1)  [block] { y = x * 2 };
+        \node (b3) at (1, -1)   [block] { y = x - 3 };
+        \node (b4) at (0, -2)   [block] { w = x - y };
+
+        \draw [->] (b1) -- (b2);
+        \draw [->] (b2) -- (b4);
+        \draw [->] (b1) -- (b3);
+        \draw [->] (b3) -- (b4);
+      \end{scope}
+
+      \draw [->, thick] (code) -- ($(cfg1.west)+(-4mm, 0)$);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      We don't know which \texttt{y} we're using after the \texttt{if} block: \\[1em]
+
+      \begin{tikzpicture}[
+        auto,
+        block/.style={draw=black!50, thin, densely dashed, outer sep=1mm, font=\small\ttfamily},
+        edge/.style={above, font=\scriptsize\ttfamily}
+      ]
+        \node (b1) at (0, 0)    [block] { x\textsubscript{1} < 3 ? };
+        \node (b2) at (-1.5, -1)  [block] { y\textsubscript{1} = x\textsubscript{1} * 2 };
+        \node (b3) at (1.5, -1)   [block] { y\textsubscript{2} = x\textsubscript{1} - 3 };
+        \node (b4) at (0, -2)   [block] { w\textsubscript{1} = x\textsubscript{1} - y\textsubscript{?} };
+
+        \draw [->] (b1) -- (b2);
+        \draw [->] (b2) -- (b4);
+        \draw [->] (b1) -- (b3);
+        \draw [->] (b3) -- (b4);
+      \end{tikzpicture}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \onslide<2->{%
+        We introduce a Φ (phi) function to "choose" beteween
+        \texttt{y\textsubscript{1}} and \texttt{y\textsubscript{2}}: \\[1.5em]
+
+        \begin{tikzpicture}[
+          auto,
+          block/.style={draw=black!50, thin, densely dashed, outer sep=1mm, font=\small\ttfamily},
+          edge/.style={above, font=\scriptsize\ttfamily}
+        ]
+          \node (b1) at (0, 0)      [block] { x\textsubscript{1} < 3 ? };
+          \node (b2) at (-1.5, -1)  [block] { y\textsubscript{1} = x\textsubscript{1} * 2 };
+          \node (b3) at (1.5, -1)   [block] { y\textsubscript{2} = x\textsubscript{1} - 3 };
+
+          \node (b4) at (0, -2.5)   [block, align=left] {%
+            y\textsubscript{3} = Φ(y\textsubscript{1}, y\textsubscript{2}) \\
+            w\textsubscript{1} = x\textsubscript{1} - y\textsubscript{?}
+          };
+
+          \draw [->] (b1) -- (b2);
+          \draw [->] (b2) -- (b4);
+          \draw [->] (b1) -- (b3);
+          \draw [->] (b3) -- (b4);
+        \end{tikzpicture}
+      }
+
+      \vspace*{1em}
+      Following the \texttt{if} block, we can simply use
+      \texttt{y\textsubscript{3}}
+    \end{column}
+  \end{columns}
+\end{frame}
+  
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  SSA is useful in a number of optimizations:
+
+  \begin{itemize}
+    \item Computing constant expressions at compile-time
+    \item Eliminating dead/unreachable code
+    \item Replacing equivalent duplicate computations (value numbering)
+    \item Etc. etc.
+  \end{itemize}
 \end{frame}
 
 % ---------------------------
-\renewcommand{\currenttitle}{Lower-level IR}
+\renewcommand{\currenttitle}{Memory management}
 \begin{frame}[fragile]{\currenttitle}
+  \begin{columns}
+    \begin{column}{0.6\textwidth}
+      At runtime, the program must allocate memory to store data and perform
+      computations:
+      \begin{itemize}
+        \item Statically-allocated \textbf{stack}
+        \item Dynamically-allocated \textbf{heap}
+        \item Read/writable static globals
+        \item Literal values and constants
+        \item Executable code
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.3\textwidth}
+      \newcommand{\sectionn}[6]{%
+        \node (#2) [
+          section,
+          below=0 of #3,
+          minimum height=#4,
+          preaction={fill, #5},
+          #6
+        ] {#1};%
+      }
+      \newcommand{\datasectionn}[3]{%
+        \sectionn{#1}{#2}{#3}{5.7mm}{black!20}{font=\footnotesize}
+        \draw [--, draw=black!50] (#2.north west) -- (#2.north east);%
+      }
+
+      \begin{tikzpicture}[section/.style={minimum width=3cm}]
+        \node (container) [draw, minimum width=3cm, minimum height=50mm] {};
+
+        \sectionn{Stack}{stack}{container.north}{8mm}{red!30}{}
+        \draw [--, dashed, draw=black!50] (stack.south west) -- (stack.south east);
+
+        \sectionn{Free space}{free}{stack}{12mm}{black!5}{}
+
+        \sectionn{Heap}{heap}{free}{12mm}{yellow!30}{}
+        \draw [--, dashed, draw=black!50] (heap.north west) -- (heap.north east);
+
+        \foreach \n in {1,...,5}{
+          \draw [->, draw=black!80] ($(stack.south west)+(\n{}*5mm, 1.5mm)$)  -- ($(stack.south west)+(\n{}*5mm, -2mm)$);
+          \draw [->, draw=black!80] ($(heap.north west)+(\n{}*5mm, -2mm)$)    -- ($(heap.north west)+(\n{}*5mm, 1.5mm)$);
+        }
+
+        \datasectionn{Static globals}{static}{heap}
+        \datasectionn{Constants}{consts}{static}
+        \datasectionn{Code}{code}{consts}
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Stack management}
 \begin{frame}[fragile]{\currenttitle}
+  As the compiler generates lower-level code in the intermediate and back-end
+  phases, it must insert code to manage function calls and stack frames:
+  
+  \begin{itemize}
+    \item<2-> When a function is entered, a new \textbf{stack frame} is pushed to
+      the stack
+    \item<3-> Generated code must maintain links to upper-scope variables and
+      dynamically-called function pointers
+    \item<4-> The current stack frame is popped when the function is exited, and
+      any return values must be placed in their correct places
+  \end{itemize}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Heap management}
 \begin{frame}[fragile]{\currenttitle}
+  More often than not, the size of some object is not known at compile-time
+  (e.g. arbitrary length strings or variable-size arrays) \\[1em]
+
+  \onslide<2->{%
+    Such data is stored in the \textbf{heap}, and we store \textbf{pointers} to
+    that data on the stack \\[2em]
+  }
+
+  \onslide<3->{%
+    The compiler must therefore insert heap allocation/freeing logic where
+    appropriate
+  }
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  We can also use \textbf{garbage collection} \textendash{} the runtime
+  monitors when heap data is no longer in use and frees it
+
+  \only<+->
+  \begin{itemize}
+    \item<+-> Makes your program generally memory-safe (no access-after-free or
+      double-frees)
+    \item<+-> Non-trivial overhead cost; reduced execution speed
+    \item<+-> Non-deterministic; program execution may experience sudden pauses
+      \begin{itemize}
+        \item Absolute non-starter in high-performance environments
+      \end{itemize}
+    \item<+-> Overzealous cleanup may destroy data still in use
+  \end{itemize}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Back-end output}
 \begin{frame}[fragile]{\currenttitle}
+  As mentioned before, a compiler back-end might output different code
+  depending on the target machine
+
+  \begin{itemize}
+    \item Many compilers produce assembly code for the target machine and pass
+      it to an existing assembler
+  \end{itemize}
+\end{frame}
+
+
+% ---------------------------
+\renewcommand{\currenttitle}{Resource allocation}
+\begin{frame}[fragile]{\currenttitle}
+  The code generator must make optimal use of limited system resources: \\[2em]
+
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[font=\footnotesize]
+      \node (registers) [draw, minimum width=2cm]                       {Registers};
+      \node (l1)        [draw, below=0 of registers, minimum width=3cm] {L1 cache};
+      \node (l2)        [draw, below=0 of l1, minimum width=4cm]        {L2 cache};
+      \node (main)      [draw, below=0 of l2, minimum width=5cm]        {Main memory};
+      \node (disk)      [draw, below=0 of main, minimum width=6cm]      {Hard disk};
+
+      \node (registers_t) [right=of registers]  {256KB - 8KB, 0.25 - 1ns};
+      \node (l1_t)        [right=of l1]         {16KB - 64KB, 1 - 5ns};
+      \node (l2_t)        [right=of l2]         {1MB - 4MB, 5 - 25ns};
+      \node (main_t)      [right=of main]       {4GB - 256GB, 25 - 100ns};
+      \node (disk_t)      [right=of disk]       {HUGE, 3 - 10ms};
+    \end{tikzpicture}
+    \caption{Memory hierarchy}
+  \end{figure}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Register allocation}
+\begin{frame}[fragile]{\currenttitle}
+  In the case of native machine code, the back-end code generator must produce
+  code that makes use of the CPU \textbf{registers}:
+
+  \only<+->{}
+  \begin{itemize}
+    \item<+-> CPUs have a small amount of registers that they can accesss very
+      quickly; computations are very fast with data inside registers
+    \item<+-> A good compiler will optimize a program's use of the registers
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
 \begin{frame}[fragile]{\currenttitle}
 \end{frame}
 
