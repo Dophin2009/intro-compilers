@@ -1,8 +1,10 @@
 beamer
 beamertheme-metropolis
+colortbl
 csquotes
 fira
 hyperref
+lcg
 listings
 pgfopts
 subfiles
