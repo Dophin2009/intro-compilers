@@ -288,7 +288,7 @@ int main() {
     \node (source) {Source program};
     \node (lexer) [draw, right=of source] {Lexical analyzer};
     \node (table) [draw, below right=of lexer] {Symbol Table};
-    \node (parser) [draw, right=of lexer:7] {Parser};
+    \node (parser) [draw, right=3 of lexer] {Parser};
 
     \draw [->] (source) to (lexer);
     \draw [<->] (lexer) to (table);
@@ -1000,19 +1000,19 @@ let w = x - y;
       }
       \newcommand{\datasectionn}[3]{%
         \sectionn{#1}{#2}{#3}{5.7mm}{black!20}{font=\footnotesize}
-        \draw [--, draw=black!50] (#2.north west) -- (#2.north east);%
+        \draw [draw=black!50] (#2.north west) -- (#2.north east);%
       }
 
       \begin{tikzpicture}[section/.style={minimum width=3cm}]
         \node (container) [draw, minimum width=3cm, minimum height=50mm] {};
 
         \sectionn{Stack}{stack}{container.north}{8mm}{red!30}{}
-        \draw [--, dashed, draw=black!50] (stack.south west) -- (stack.south east);
+        \draw [dashed, draw=black!50] (stack.south west) -- (stack.south east);
 
         \sectionn{Free space}{free}{stack}{12mm}{black!5}{}
 
         \sectionn{Heap}{heap}{free}{12mm}{yellow!30}{}
-        \draw [--, dashed, draw=black!50] (heap.north west) -- (heap.north east);
+        \draw [dashed, draw=black!50] (heap.north west) -- (heap.north east);
 
         \foreach \n in {1,...,5}{
           \draw [->, draw=black!80] ($(stack.south west)+(\n{}*5mm, 1.5mm)$)  -- ($(stack.south west)+(\n{}*5mm, -2mm)$);
