@@ -9,18 +9,129 @@
 \section{\sectiontitle}
 
 % ---------------------------
+\renewcommand{\currenttitle}{First, why?}
+\begin{frame}{\currenttitle}
+  Why might you want to create a compiler?
+
+  \only<+->{}
+  \begin{itemize}
+    \item<+-> Writing a domain-specific language (DSL) such as a custom configuration or specification language
+    \item<+-> Learn about useful data structures and algorithms
+    \item<+-> Having a better understanding of compilers will make you a better programmer
+    \item<+-> Software engineering exercise
+    \item<+-> Etc.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{My first recommendation}
+\begin{frame}{\currenttitle}
+  Learn a lower-level language (such as C, C++, or Rust):
+  
+  \begin{itemize}
+    \item Teach you a lot about memory management
+    \item Expose you to systems programming concepts
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Learning materials}
+\begin{frame}{\currenttitle}
+  Follow a tutorial or book:
+
+  \begin{itemize}
+    \item Crafting Interpreters\footnote{\url{https://craftinginterpreters.com/}} (Java)
+    \item LLVM Kaleidoscope language tutorial (C++)
+    \item Dragon Book (\textit{Compilers: Principles, Techniques, and
+      Tools})\footnote{College textbook material; heavy use of weird formal
+                       language and mathematical notation}
+    \item \textit{Modern Compiler Design}
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\renewcommand{\currenttitle}{Useful tools}
+\begin{frame}{\currenttitle}
+  If you're not hell-bent on doing everything from scratch, use of pre-existing
+  tools will help make your compiler better and easier to develop:
+
+  \begin{itemize}
+    \item Lexer generators
+    \item Parser generators
+    \item Analysis and optimization infrastructures
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
 \renewcommand{\currenttitle}{Lexer generators}
 \begin{frame}{\currenttitle}
+  Instead of handwriting a lexer or implementing regular expression and state
+  machines, you can use a tool that will generate lexers \\[1.5em]
+
+  Typically:
+
+  \begin{itemize}
+    \item Input regular expressions and the tokens they resolve to
+    \item Can embed code to process the text from the input
+  \end{itemize}
+\end{frame}
+
+% ---------------------------
+\begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
+  Example for the lexer generator I wrote (Rust): \\[1em]
+
+  \begin{lstlisting}[language=Rust]
+lexer! {
+    pub struct Lexer;
+    pub fn stream;
+    (text) -> Token, Token::Error;
+
+    r"\s" => None,
+    r"[0-9]+" => {
+        let i = text.parse().unwrap();
+        Some(Token::Integer(i))
+    }
+    r"[0-9]+(\.[0-9]+)?" => {
+        let f = text.parse().unwrap();
+        Some(Token::Float(f))
+    }
+}
+  \end{lstlisting}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{Parser generators}
 \begin{frame}{\currenttitle}
+  \textbf{Parser generators} will generate a parser for a grammar:
+
+  \begin{itemize}
+    \item Define production rules
+    \item Embed code to serve as translation rules (to construct an AST,
+      evalulate expressions, etc.)
+    \item Most commonly LR parsers
+  \end{itemize}
 \end{frame}
 
 % ---------------------------
 \renewcommand{\currenttitle}{LLVM}
 \begin{frame}{\currenttitle}
+  \textbf{LLVM} is a compiler infrastructure that can provide the intermediate
+  and back-end phases:
+
+  \begin{itemize}
+    \item<+-> Defines its own SSA-based IR that it can perform all kinds of
+      optimizations on
+    \item<+-> Has back-ends implemented for many different target machines
+    \item<+-> Many production compilers implemented with LLVM
+      \begin{itemize}
+        \item C\#
+        \item Clang (C/C++)
+        \item Haskell
+        \item Rust
+        \item Etc.
+      \end{itemize}
+  \end{itemize}
 \end{frame}
 
 % -----------------------------------------------
