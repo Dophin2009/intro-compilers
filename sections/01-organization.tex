@@ -558,48 +558,126 @@ let x = sum(a, 10);
   A \textbf{control-flow graph} uses a graph representation to organize all
   code paths possible during execution
 
-  It's a \textbf{directed graph} with \textbf{basic blocks} as nodes:
+  It's a \textbf{directed graph} with \textbf{basic blocks} as nodes: \\[1em]
 
-  \begin{tikzpicture}
-  \end{tikzpicture}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{scope}[local bounding box=code]
+        \node (code) {
+          \begin{lstlisting}[language=C++]
+w = abs(y);
+z = 1.0;
+while (w != 0) {
+  z = z * x;
+  w = w - 1;
+}
+
+if (y < 0) {
+  z = 1.0 / z;
+}
+return z;
+          \end{lstlisting}
+        };
+      \end{scope}
+
+      \begin{scope}[
+        shift={($(code.east)+(4cm, 1.9cm)$)},
+        auto,
+        outer sep=0.5mm,
+        node distance=5mm,
+        block/.style={draw=black!50, dashed, align=left}
+      ]
+        \node (b1) [block] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+w = abs(y);
+z = 1.0;
+          \end{lstlisting}
+        };
+
+        \node (b2) [block, below=of b1] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+while (w != 0)
+          \end{lstlisting}
+        };
+
+        \node (b3) [block, below left=1mm of b2] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+z = z * x;
+w = w - 1;
+          \end{lstlisting}
+        };
+
+        \node (b4) [block, below=0.8 of b2] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+if (y < 0)
+          \end{lstlisting}
+        };
+
+        \node (b5) [block, below right=1mm of b4] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+z = 1.0 / z;
+          \end{lstlisting}
+        };
+
+        \node (b6) [block, below=0.8 of b4] {%
+          \begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+return z;
+          \end{lstlisting}
+        };
+
+      \path[->]
+        (b1) edge (b2)
+        (b2) edge [bend left] (b3)
+        (b3) edge [bend left] (b2)
+        (b2) edge (b4)
+        (b4) edge [bend left] (b5)
+        (b5) edge [bend left] (b6)
+        (b4) edge (b6)
+        ;
+      \end{scope}
+    \end{tikzpicture}
+  \end{center}
 \end{frame}
 
 % ---------------------------
 \begin{frame}[fragile]{\currenttitle}
-  To achieve basic blocks, we can use \textbf{directed acyclic graphs (DAGs)}:
+  To achieve basic blocks, we can use a tuple representation (up next),
+  \textbf{directed acyclic graphs (DAGs)} as shown below, or something else:
+  \\[1.5em]
 
   \newcommand{\lbl}[1]{\texttt{\small\bfseries #1}}
-  \begin{tikzpicture}
-    \begin{scope}[local bounding box=code]
-      \node (code) {
-        \begin{lstlisting}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{scope}[local bounding box=code]
+        \node (code) {
+          \begin{lstlisting}[language=C++,basicstyle=\ttfamily\normalsize]
 a = b + c
 d = a * b
-        \end{lstlisting}
-      };
-    \end{scope}
+          \end{lstlisting}
+        };
+      \end{scope}
 
-    \begin{scope}[
-      shift={($(code.east)+(4cm, 0)$)},
-      auto,
-      outer sep=0.5mm,
-      node distance=1cm,
-      inner/.style={draw, shape=circle},
-      leaf/.style={draw=none, font=\bfseries}
-    ]
-      \node (star) at (0, 0) [inner, label={\lbl{d}}] {*};
-      \node (plus) at (-0.5, -1.5) [inner, label={\lbl{a}}] {+};
-      \node (c) at (-1.5, -3) [leaf] {c};
-      \node (b) at (0.5, -3) [leaf] {b};
+      \begin{scope}[
+        shift={($(code.east)+(4cm, 5mm)$)},
+        auto,
+        outer sep=0.5mm,
+        node distance=1cm,
+        inner/.style={draw, shape=circle},
+        leaf/.style={draw=none, font=\bfseries}
+      ]
+        \node (star) at (0, 0) [inner, label={\lbl{d}}] {*};
+        \node (plus) at (-0.5, -1.5) [inner, label={\lbl{a}}] {+};
+        \node (c) at (-1.5, -3) [leaf] {c};
+        \node (b) at (0.5, -3) [leaf] {b};
 
-      \draw [<-] (star) to (plus);
-      \draw [<-, bend left] (star) to (b);
-      \draw [<-] (plus) to (b);
-      \draw [<-] (plus) to (c);
+        \draw [<-] (star) to (plus);
+        \draw [<-, bend left] (star) to (b);
+        \draw [<-] (plus) to (b);
+        \draw [<-] (plus) to (c);
+      \end{scope}
 
-    \end{scope}
-
-  \end{tikzpicture}
+    \end{tikzpicture}
+  \end{center}
 \end{frame}
 
 % ---------------------------
@@ -610,6 +688,9 @@ d = a * b
     \item \textbf{Reachability} - Checking the edges between basic blocks can
       determine subgraphs that are unreachable; these can be removed from the
       final program
+    \item \textbf{Data dependency} - Instruction scheduling and register
+      allocation later on can be improved by analyzing dependencies between
+      data
   \end{itemize}
 \end{frame}
   
@@ -1045,11 +1126,8 @@ let w = x - y;
     \item<+-> CPUs have a small amount of registers that they can accesss very
       quickly; computations are very fast with data inside registers
     \item<+-> A good compiler will optimize a program's use of the registers
+    \item<+-> There are, of course, a couple different algorithms for allocation
   \end{itemize}
-\end{frame}
-
-% ---------------------------
-\begin{frame}[fragile]{\currenttitle}
 \end{frame}
 
 % -----------------------------------------------
