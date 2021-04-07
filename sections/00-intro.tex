@@ -12,11 +12,11 @@
   A shallow review of:
 
   \begin{itemize}
-    \item Requirements and objectives
+    \item<+-> Requirements and objectives
       \begin{itemize}
         \item Different kinds of compilers
       \end{itemize}
-    \item Organization of a basic compiler
+    \item<+-> Organization of a basic compiler
       \begin{itemize}
         \item Lexical analyzers and regular expressions
         \item Parsing algorithms
@@ -24,7 +24,7 @@
         \item Analysis techniques
         \item Code generation
       \end{itemize}
-    \item Useful tools for creating compilers
+    \item<+-> Useful tools for creating compilers
   \end{itemize}
 \end{frame}
 
@@ -262,13 +262,13 @@ var Greeter = (function() {
 \begin{frame}[fragile]{\currenttitle}
   A compiler developer is subject to stringent requirements \\[2em]
 
-  A compiler must be:
+  \onslide<2->{A compiler must be:}
   \begin{itemize}
-    \item \textbf{Fast} \textendash{} We must be able to compile source
+    \item<2-> \textbf{Fast} \textendash{} We must be able to compile source
       programs in a reasonable amount of time
-    \item \textbf{Correct} \textendash{} The resulting program must match
+    \item<3-> \textbf{Correct} \textendash{} The resulting program must match
       the intent of the programmer and language specification
-    \item \textbf{Optimized} \textendash{} The resulting program must be
+    \item<4-> \textbf{Optimized} \textendash{} The resulting program must be
       efficient and make good use of the target machine's capabilities
   \end{itemize}
 \end{frame}

@@ -16,25 +16,30 @@
 
   \begin{tikzpicture}[%
     wrapper/.style={matrix of nodes, nodes=typetag, row sep=1em},
-    container/.style={draw, inner sep=1ex},
-    typetag/.style={draw=gray, inner sep=1ex, anchor=west},
-    title/.style={draw=none, inner sep=0pt}
+    container/.style={draw=black!60, dashed, inner sep=1ex},
+    typetag/.style={draw=black!80, inner sep=1ex, anchor=west},
+    title/.style={draw=none, inner sep=0pt, font=\bfseries}
   ]
-    \matrix[wrapper] (Frontend) {
+    \matrix[wrapper, visible on=<1->] (Frontend) {
       |[title]|Front-end \\
       Lexical analysis \\
       Parsing \\
       Semantic analysis \\
       Intermediate code generation \\
     };
-    \matrix[wrapper, right=of Frontend.north east, matrix anchor=north west] (Backend) {
+    \matrix[
+      wrapper,
+      visible on=<2->,
+      right=of Frontend.north east,
+      matrix anchor=north west
+    ] (Backend) {
       |[title]|Back-end \\
       More optimization \\
       Code generation \\
     };
 
-    \node[container, fit=(Frontend)] {};
-    \node[container, fit=(Backend)] {};
+    \node[container, fit=(Frontend), visible on=<1->] {};
+    \node[container, fit=(Backend), visible on=<2->] {};
   \end{tikzpicture}
 \end{frame}
 
@@ -61,7 +66,7 @@
 
 % ---------------------------
 \begin{frame}{\currenttitle}
-  Different targets need different output code. For example:
+  Different targets need different output code. \onslide<2->{For example:}
 
   \begin{itemize}
     \item<2-> Different CPU architectures have different sets of instructions and quirks
@@ -69,6 +74,8 @@
         \item e.g. the x86 instruction set is different from ARM or MIPS sets
       \end{itemize}
     \item<3-> Web assembly bytecode is different from other bytecode, such as JVM bytecode
+    \item<4-> An engine that executes JavaScript (e.g. your browser or Node.js)
+      obviously can't use native machine code or Python bytecode
   \end{itemize}
 
   \vspace*{1em}
@@ -94,10 +101,11 @@
 \begin{frame}{\currenttitle}
   Often, it may be even more meaningful to distinguish between three sections:
 
+  \only<+->{}
   \begin{itemize}
     \item<+-> Front-end concerned with parsing and language-specific analysis
       and optimization
-    \item<+-> Intermediate phases that analyze and optimize a language-agnostic
+    \item<+-> Intermediate phases (mid-end) that analyze and optimize a language-agnostic
       IR
     \item<+-> Back-end code generation concerned with the details of the target
       machine
@@ -164,7 +172,15 @@
   To convert textual source code into \textbf{tokens}, we must perform
   \textbf{lexical analysis}: \\[1em]
 
-  Given the source code: 
+  \begin{onlyenv}<2->
+    Given the source code: 
+
+    \begin{lstlisting}[language=C++,xleftmargin=1.5em]
+int main() {
+  return 1;
+}
+    \end{lstlisting}
+  \end{onlyenv}
 
   \newcommand{\token}[2]{%
     {
@@ -177,27 +193,23 @@
     }
   }
 
-  \begin{lstlisting}[language=C++,xleftmargin=1.5em]
-int main() {
-  return 1;
-}
-  \end{lstlisting}
+  \onslide<3->{
+    The \textbf{lexer / lexical analyzer} might spit out the tokens: \\[0.5em]
 
-  The \textbf{lexer / lexical analyzer} might spit out the tokens: \\[0.5em]
+    \begin{tikzpicture}
+      \newcommand{\tokennode}[2]{
+        \node [shape=rectangle, anchor=west, outer sep=.0] {
+          \token{#1}{#2}
+        };
+      }
 
-  \begin{tikzpicture}
-    \newcommand{\tokennode}[2]{
-      \node [shape=rectangle, anchor=west, outer sep=.0] {
-        \token{#1}{#2}
+      \matrix[ampersand replacement=\&, matrix of nodes, align=left] {
+        \tokennode{int}{Type}   \& \tokennode{main}{Identifier} \& \tokennode{(}{Symbol}        \\
+        \tokennode{)}{Symbol}   \& \tokennode{\{}{Symbol}       \& \tokennode{return}{Keyword}  \\
+        \tokennode{1}{Literal}  \& \tokennode{;}{Symbol}        \& \tokennode{\}}{Symbol}       \\
       };
-    }
-
-    \matrix[ampersand replacement=\&, matrix of nodes, align=left] {
-      \tokennode{int}{Type}   \& \tokennode{main}{Identifier} \& \tokennode{(}{Symbol}        \\
-      \tokennode{)}{Symbol}   \& \tokennode{\{}{Symbol}       \& \tokennode{return}{Keyword}  \\
-      \tokennode{1}{Literal}  \& \tokennode{;}{Symbol}        \& \tokennode{\}}{Symbol}       \\
-    };
-  \end{tikzpicture}
+    \end{tikzpicture}
+  }
 \end{frame}
 
 % ---------------------------
@@ -222,15 +234,15 @@ int main() {
 
   \vspace*{1em}
 
-  \newcommand{\statenode}[2]{\node [state] (#1) [#2] {$#1$}}
+  \newcommand{\statetext}[1]{s\textsubscript{#1}}
   \begin{center}
     \begin{tikzpicture}[shorten >= 1pt, node distance=2cm, on grid, auto, font=\ttfamily]
       \tikzstyle{every state}=[fill={rgb:black,1;white,10}]
 
-      \node [state, initial]    (s_0)                       {$s_0$};
-      \node [state]             (s_1) [above right of=s_0]  {$s_1$};
-      \node [state, accepting]  (s_2) [below right of=s_1]  {$s_2$};
-      \node [state, accepting]  (s_3) [right of=s_2]        {$s_3$};
+      \node [state, initial]    (s_0)                       {\statetext{0}};
+      \node [state]             (s_1) [above right of=s_0]  {\statetext{1}};
+      \node [state, accepting]  (s_2) [below right of=s_1]  {\statetext{2}};
+      \node [state, accepting]  (s_3) [right of=s_2]        {\statetext{3}};
 
       \path[->]
         (s_0) edge                node {+/-} (s_1)
@@ -245,7 +257,7 @@ int main() {
 
   \only<+>{
     \begin{itemize}
-      \item Start on $s_0$
+      \item Start on s\textsubscript{0}
       \item Read input and move accordingly until the end of the input
         \begin{itemize}
           \item If we end on a double-ringed (accepting) state, the input
@@ -346,6 +358,8 @@ num       = integer
 \begin{frame}[fragile]{\currenttitle}
   Context-free grammars use sets of \textbf{production rules} that define the
   structure of the language:
+
+  \only<+->
   \begin{itemize}
     \item<+-> A rule contains a \textbf{nonterminal} symbol on the right and a
       sequence of both nonterminal and \textbf{terminal} symbols on the left
@@ -522,17 +536,19 @@ enum class Op { Add, Sub, Neg };
   A classic and widely used method of checking and inferring types is the
   \textbf{Hindley-Milner type system}
 
-  We can infer that the variables \texttt{a} and \texttt{x} are of type
-  \texttt{u32} 
+  \begin{onlyenv}<2->
+    We can infer that the variables \texttt{a} and \texttt{x} are of type
+    \texttt{u32} 
 
-  \begin{lstlisting}[language=Rust, xleftmargin=5mm]
+    \begin{lstlisting}[language=Rust, xleftmargin=5mm]
 fn sum(a: u32, b: u32) -> u32 {
   return a + b;
 }
 
 let a = 5;
 let x = sum(a, 10);
-  \end{lstlisting}
+    \end{lstlisting}
+  \end{onlyenv}
 \end{frame}
   
 % ---------------------------
@@ -558,11 +574,13 @@ let x = sum(a, 10);
   A \textbf{control-flow graph} uses a graph representation to organize all
   code paths possible during execution
 
-  It's a \textbf{directed graph} with \textbf{basic blocks} as nodes: \\[1em]
+  \onslide<2->{%
+    It's a \textbf{directed graph} with \textbf{basic blocks} as nodes: \\[1em]
+  }
 
   \begin{center}
     \begin{tikzpicture}
-      \begin{scope}[local bounding box=code]
+      \begin{scope}[local bounding box=code, visible on=<3->]
         \node (code) {
           \begin{lstlisting}[language=C++]
 w = abs(y);
@@ -582,6 +600,7 @@ return z;
 
       \begin{scope}[
         shift={($(code.east)+(4cm, 1.9cm)$)},
+        visible on=<4->,
         auto,
         outer sep=0.5mm,
         node distance=5mm,
@@ -724,7 +743,7 @@ d = a * b
   objects\footnotemark{}: \\[1em]
   
   \begin{tikzpicture}
-    \node at (0, 0) (cpp) [draw=black!50, thin, densely dashed] {
+    \node at (0, 0) (cpp) [draw=black!50, thin, densely dashed, visible on=<2->] {
       \begin{lstlisting}[language=C++]
 double a[20][10];
 ...
@@ -734,7 +753,11 @@ for (int i = 0; i < n; i += di) {
       \end{lstlisting}
     };
 
-    \node at (4.5, -2.4) (hir) [draw=black!50, thin, densely dashed, preaction={fill, normal text.bg}] {
+    \node at (4.5, -2.4) (hir) [
+      draw=black!50, thin, densely dashed,
+      preaction={fill, normal text.bg},
+      visible on=<3->
+    ] {
       \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
 (COPY, 0, i)                        i := 0
 (LABEL, L1)                    L1:
@@ -771,6 +794,7 @@ for (int i = 0; i < n; i += di) {
   
 % ---------------------------
 \begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
   If \texttt{double}s are 8 bytes, and \texttt{int}s are 4 bytes, the same code
   in mid-level IR: \\[1.5em]
 
@@ -803,6 +827,7 @@ for (int i = 0; i < n; i += di) {
   
 % ---------------------------
 \begin{frame}[fragile]{\currenttitle}
+  \vspace*{1em}
   Same code in low-level IR for a RISC processor: \\[1em]
 
   \begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
@@ -847,16 +872,18 @@ for (int i = 0; i < n; i += di) {
     x := y
   } \\[1em]
 
-  The SSA form:
+  \onslide<2->{
+    The SSA form:
 
-  \texttt{%
-    y\textsubscript{1} := 1 \\
-    y\textsubscript{2} := 1 \\
-    x\textsubscript{1} := y\textsubscript{2}
+    \texttt{%
+      y\textsubscript{1} := 1 \\
+      y\textsubscript{2} := 1 \\
+      x\textsubscript{1} := y\textsubscript{2}
+    }
+
+    It's immediately obvious that y\textsubscript{1} is unused and that statement
+    can be eliminated
   }
-
-  It's immediately obvious that y\textsubscript{1} is unused and that statement
-  can be eliminated
 \end{frame}
   
 % ---------------------------
@@ -951,11 +978,11 @@ let w = x - y;
           \draw [->] (b1) -- (b3);
           \draw [->] (b3) -- (b4);
         \end{tikzpicture}
-      }
 
-      \vspace*{1em}
-      Following the \texttt{if} block, we can simply use
-      \texttt{y\textsubscript{3}}
+        \vspace*{1em}
+        Following the \texttt{if} block, we can simply use
+        \texttt{y\textsubscript{3} and optimize based on that}
+      }
     \end{column}
   \end{columns}
 \end{frame}
