@@ -11,6 +11,7 @@
   
   A shallow review of:
 
+  \only<+->{}
   \begin{itemize}
     \item<+-> Requirements and objectives
       \begin{itemize}
@@ -37,8 +38,10 @@
 \begin{frame}[fragile]{\currenttitle}
   A compiler \textbf{translates source code from one language to another} \\[2em]
 
-  We're typically referring to \textbf{the translation of a high-level
-  programming language to executable low-level code}
+  \onslide<2->{
+    We're typically referring to \textbf{the translation of a high-level
+    programming language to executable low-level code}
+  }
 \end{frame}
 
 % ---------------------------
@@ -85,9 +88,10 @@ int main() {
           \centering
           \tiny\ttfamily
           \noindent
-          \foreach \n in {1,...,4}{
+          \foreach \n in {1,...,3}{
             \foreach \m in {1,...,40} {\randbit} \\
           }
+          \foreach \m in {1,...,39} {\randbit}\ldots \\
         }
     };
 
