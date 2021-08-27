@@ -27,6 +27,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: latest
           prerelease: true
-          title: Latest Development Build
+          title: Latest Build
           files: |
             target/index.pdf

@@ -248,13 +248,13 @@ var Greeter = (function() {
       \node (executable)  [output, below=2 of linker]     {\outputt{Executable}{ \_ ,*.exe}};
 
       \node (lib)         [output, below left=of linker]  {\outputt{Library objects}{*.o, *.obj}};
-      \node (os)          [output, left=of linker]        {\outputt{OS code}{}};
+      \node (OS)          [output, left=of linker]        {\outputt{OS code}{}};
 
       \draw[->] (source)    to (compiler);
       \draw[->] (compiler)  to (object);
       \draw[->] (object)    to (linker);
       \draw[->] (lib)       to (linker);
-      \draw[->] (os)        to (linker);
+      \draw[->] (OS)        to (linker);
       \draw[->] (linker)    to (executable);
     \end{tikzpicture}
   \end{center}
