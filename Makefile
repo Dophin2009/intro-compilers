@@ -1,9 +1,8 @@
-TARGET ?= target
+index.pdf : index.tex $(wildcard sections/*)
+	mkdir -p build
+	latexmk index.tex
+	cp build/index.pdf index.pdf
 
-LATEXMK ?= latexmk
-
-.PHONY : index
-
-index : index.tex $(wildcard sections/*)
-	@mkdir -p $(TARGET)
-	$(LATEXMK)
+.PHONY : clean
+clean :
+	rm -rf *.pdf build/
